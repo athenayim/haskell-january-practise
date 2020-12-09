@@ -21,6 +21,7 @@ goTest (TestCase name f cases) = do
     majorExceptionHandler :: SomeException -> IO Bool
     majorExceptionHandler e = putStrLn ("Argument exception: " ++ show e) >> return False
 
+goTestOne :: (Eq x, Reformat t, Show x) => [Char] -> (t -> x) -> (t, x) -> IO Bool
 goTestOne name f (input, expected) = handle exceptionHandler $ do
   r <- evaluate (f input)
   if r == expected

@@ -8,21 +8,19 @@ data BinTree a = Node a Int (BinHeap a)
 --------------------------------------------------------------
 -- PART I
 
-key :: BinTree a -> a
-key
-  = undefined
+value :: BinTree a -> a
+value (Node x _ _) = x
 
 rank :: BinTree a -> Int
-rank
-  = undefined
+rank (Node _ r _) = r
 
 children :: BinTree a -> [BinTree a]
-children
-  = undefined
+children (Node _ _ ch) = ch
 
 combineTrees :: Ord a => BinTree a -> BinTree a -> BinTree a
-combineTrees 
-  = undefined
+combineTrees t1@(Node x1 r1 ch1) t2@(Node x2 r2 ch2)
+ | x1 < x2   = Node x1 (r1 + 1) (t2 : ch1)
+ | otherwise = Node x2 (r2 + 1) (t1 : ch2)
 
 --------------------------------------------------------------
 -- PART II
