@@ -1,3 +1,5 @@
+module BinomialHeaps where
+
 type BinHeap a = [BinTree a]
 
 data BinTree a = Node a Int (BinHeap a)
