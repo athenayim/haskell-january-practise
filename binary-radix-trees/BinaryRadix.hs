@@ -44,24 +44,33 @@ rs = randomInts 1000 500 765539
 --------------------------------------------------------------------------
 -- Pre (universal): all integers are non-negative
 
--- Computes number of bytes of memory used to represent IntTree
+-- Computes bytes used to represent IntTree
 -- Empty - 1 byte, Leaf - 5 bytes, Node - 13 bytes
 size :: IntTree -> Int
 size Empty = 1
 size (Leaf _) = 5
 size (Node _ l r) = 13 + size l + size r
 
+-- Computes bytes used to represent RadixTree
+-- Leaf - 1 byte, Node - 9 byes
 size' :: RadixTree -> Int
-size'
-  = undefined
+size' (Leaf _) = 1
+size' (Node _ l r) = 9 + size' l + size' r
 
+-- Converts integer to its binary representation
 binary :: Int -> BitString
-binary
-  = undefined
+binary 0 = [0]
+binary 1 = [1]
+binary n = binary (n `div` 2) ++ binary (n `mod` 2)
 
+-- Adds a bit string to a radix tree
 insert :: BitString -> RadixTree -> RadixTree
-insert
-  = undefined
+insert [] (Node _ l r) = Node True l r
+insert [] (Leaf _) = Leaf True
+insert (x : xs) (Node n l r)
+ | x == 0    = Node n (insert xs l) r
+ | otherwise = Node n l (insert xs r)
+insert xs (Leaf n) = insert xs (Node n (Leaf False) (Leaf False))
 
 buildRadixTree :: [Int] -> RadixTree
 buildRadixTree
