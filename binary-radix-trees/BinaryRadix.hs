@@ -74,9 +74,8 @@ insert xs (Leaf n) = insert xs (Node n (Leaf False) (Leaf False))
 
 -- Builds radix tree from list of ints
 buildRadixTree :: [Int] -> RadixTree
-buildRadixTree [] = Leaf False
-buildRadixTree (x : xs)
- = insert (binary x) (buildRadixTree xs)
+buildRadixTree xs
+ = foldr (insert . binary) (Leaf False) xs
 
 -- Checks whether an int is in a radix tree
 member :: Int -> RadixTree -> Bool
