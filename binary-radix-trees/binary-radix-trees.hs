@@ -44,9 +44,12 @@ rs = randomInts 1000 500 765539
 --------------------------------------------------------------------------
 -- Pre (universal): all integers are non-negative
 
+-- Computes number of bytes of memory used to represent IntTree
+-- Empty - 1 byte, Leaf - 5 bytes, Node - 13 bytes
 size :: IntTree -> Int
-size
-  = undefined
+size Empty = 1
+size (Leaf _) = 5
+size (Node _ l r) = 13 + size l + size r
 
 size' :: RadixTree -> Int
 size'
