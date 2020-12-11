@@ -72,24 +72,51 @@ insert (x : xs) (Node n l r)
  | otherwise = Node n l (insert xs r)
 insert xs (Leaf n) = insert xs (Node n (Leaf False) (Leaf False))
 
+-- Builds radix tree from list of ints
 buildRadixTree :: [Int] -> RadixTree
-buildRadixTree
-  = undefined
+buildRadixTree [] = Leaf False
+buildRadixTree (x : xs)
+ = insert (binary x) (buildRadixTree xs)
 
+-- Checks whether an int is in a radix tree
 member :: Int -> RadixTree -> Bool
-member
-  = undefined
+member n t
+  = member' (binary n) t
+  where
+    member' :: BitString -> RadixTree -> Bool
+    member' [] (Node x _ _) = x
+    member' [] (Leaf x) = x
+    member' (x : xs) (Node n l r)
+     | x == 0    = member' xs l
+     | otherwise = member' xs r
+    member' (x : xs) (Leaf n) = n
 
+-- Computes union of two radix trees
 union :: RadixTree -> RadixTree -> RadixTree
-union
-  = undefined
+union (Leaf False) t = t
+union t (Leaf False) = t
+union (Leaf n1) (Leaf n2) = Leaf (n1 || n2)
+union (Node n1 l1 r1) (Node n2 l2 r2)
+ = Node (n1 || n2) (union l1 l2) (union r1 r2)
 
+-- Computes intersection of two radix trees
 intersection :: RadixTree -> RadixTree -> RadixTree
-intersection
-  = undefined
+intersection (Leaf False) _ = Leaf False
+intersection _ (Leaf False) = Leaf False
+intersection (Leaf n1) (Leaf n2) = Leaf (n1 && n2)
+intersection (Node n1 l1 r1) (Node n2 l2 r2)
+ = Node (n1 && n2) (intersection l1 l2) (intersection r1 r2)
 
--- CONCLUSION: The break-even point is xxx.
+-- Returns size of IntTree and RadixTree of a given length of [Int]
+compareTrees :: Int -> (Int, Int)
+compareTrees n
+ = (intSize, radixSize)
+ where
+   ns = take n rs
+   intSize = size (buildIntTree ns)
+   radixSize = size' (buildRadixTree ns)
 
+-- CONCLUSION: The break-even point is 205.
 -----------------------------------------------------------------------------
 -- Some test trees...
 
