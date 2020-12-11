@@ -26,9 +26,9 @@ countOnes n
 -- Counts 1 bits in a binary number from a given index (up to 16 bit strings)
 countOnesFrom :: Int -> Int -> Int
 countOnesFrom i n
-  = (length . filter (== '1')) substring
-  where
-    substring = drop (16 - (i + 1)) (showBitVector n 16)
+ = (length . filter (== '1')) (showBitVector filteredBits i)
+ where
+   filteredBits = (bit i - 1) .&. n
 
 getIndex :: Int -> Int -> Int -> Int
 getIndex
