@@ -16,13 +16,19 @@ bitTable :: [Int]
 bitTable
   = [0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4]
 
+-- Counts number of 1 bits in a binary number
 countOnes :: Int -> Int
-countOnes
-  = undefined
+countOnes 0 = 0
+countOnes 1 = 1
+countOnes n
+ = n `mod` 2 + countOnes (n `div` 2)
 
+-- Counts 1 bits in a binary number from a given index (up to 16 bit strings)
 countOnesFrom :: Int -> Int -> Int
-countOnesFrom
-  = undefined
+countOnesFrom i n
+  = (length . filter (== '1')) substring
+  where
+    substring = drop (16 - (i + 1)) (showBitVector n 16)
 
 getIndex :: Int -> Int -> Int -> Int
 getIndex
