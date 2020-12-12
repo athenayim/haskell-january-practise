@@ -56,26 +56,30 @@ insertAt i n (x : xs)
 -- Part II
 
 sumTrie :: (Int -> Int) -> ([Int] -> Int) -> Trie -> Int
-sumTrie
-  = undefined
+sumTrie _ _ (Node 0 []) = 0
+sumTrie f g (Node _ [Term x])
+  = f x
+sumTrie f g (Leaf xs)
+ = g xs
+sumTrie f g (Node _ [SubTrie tr])
+ = sumTrie f g tr
+sumTrie f g (Node n (x : xs))
+ = sumTrie f g (Node n [x]) + sumTrie f g (Node n xs)
 
-{-
---
--- If you get the sumTrie function above working you can uncomment
--- these three functions; they may be useful in testing.
---
+-- Computes size of trie
 trieSize :: Trie -> Int
 trieSize t
   = sumTrie (const 1) length t
 
+-- Computes number of bins
 binCount :: Trie -> Int
 binCount t
   = sumTrie (const 1) (const 1) t
 
+-- Computes average number of values in each bin
 meanBinSize :: Trie -> Double
 meanBinSize t
   = fromIntegral (trieSize t) / fromIntegral (binCount t)
--}
 
 member :: Int -> Hash -> Trie -> Int -> Bool
 member
