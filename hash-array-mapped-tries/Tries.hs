@@ -30,19 +30,24 @@ countOnesFrom i n
  where
    filteredBits = (bit i - 1) .&. n
 
+-- Extracts a block of bits from an integer given the block size and index
 getIndex :: Int -> Int -> Int -> Int
-getIndex
+getIndex n block bsize
   = undefined
-
+  
+-- Replaces the nth item of a list with a value
 -- Pre: the index is less than the length of the list
 replace :: Int -> [a] -> a -> [a]
-replace
-  = undefined
+replace 0 (x : xs) n = n : xs
+replace i (x : xs) n
+ = x : replace (i - 1) xs n
 
+-- Inserts an item at the nth position in a list
 -- Pre: the index is less than or equal to the length of the list
 insertAt :: Int -> a -> [a] -> [a]
-insertAt
-  = undefined
+insertAt 0 n xs = n : xs
+insertAt i n (x : xs)
+ = x : insertAt (i - 1) n xs
 
 --------------------------------------------------------------------
 -- Part II
