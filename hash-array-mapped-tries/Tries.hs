@@ -33,7 +33,10 @@ countOnesFrom i n
 -- Extracts a block of bits from an integer given the block size and index
 getIndex :: Int -> Int -> Int -> Int
 getIndex n block bsize
-  = undefined
+  = blockshifted .&. (bit bsize - 1)
+  where
+    blockpos = block * bsize
+    blockshifted = shiftR n blockpos
   
 -- Replaces the nth item of a list with a value
 -- Pre: the index is less than the length of the list
