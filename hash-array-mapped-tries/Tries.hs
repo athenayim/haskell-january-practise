@@ -81,17 +81,53 @@ meanBinSize :: Trie -> Double
 meanBinSize t
   = fromIntegral (trieSize t) / fromIntegral (binCount t)
 
+-- todo finish
 member :: Int -> Hash -> Trie -> Int -> Bool
-member
-  = undefined
+member n hash trie bsize
+  = member' 0 trie
+  where
+    member' :: Int -> Trie -> Bool
+    member' lvl (Leaf xs) = n `elem` xs
+    member' lvl (Node bv sns)
+      | testBit bv index = memberSNode lvl (sns !! ones)
+      | otherwise        = False
+     where
+       index = getIndex hash lvl bsize
+       ones  = countOnesFrom index bv
+     
+    memberSNode :: Hash -> SubNode -> Bool
+    memberSNode lvl (Term x)      = n == x
+    memberSNode lvl (SubTrie t) = member' (lvl + 1) t
 
 --------------------------------------------------------------------
 -- Part III
 
 insert :: HashFun -> Int -> Int -> Int -> Trie -> Trie
-insert
-  = undefined
+insert hf maxtd bsize val t
+  = insert' val 0 t
+  where
+    insert' v lvl (Leaf vs)
+      | v `elem` vs = Leaf vs
+      | otherwise   = Leaf (v : vs)
+
+    insert' v lvl (Node bv sns)
+      | lvl == (maxtd - 1) = Leaf [v]
+      | testBit bv index   = Node bv (replace ones sns sn')
+      | otherwise          = Node (setBit bv index) (insertAt ones (Term v) sns)
+      where
+        index = getIndex (hf v) lvl bsize
+        ones  = countOnesFrom index bv
+        sn'   = newSNode (sns !! ones)
+
+        newSNode :: SubNode -> SubNode
+        newSNode (SubTrie t')
+          = SubTrie (insert' v (lvl + 1) t')
+        newSNode (Term v')
+          | v == v'   = Term v'
+          | otherwise = SubTrie (insert' v (lvl + 1) t')
+          where
+            t' = insert' v' (lvl + 1) empty
 
 buildTrie :: HashFun -> Int -> Int -> [Int] -> Trie
-buildTrie
-  = undefined
+buildTrie hf maxtd bsize xs
+  = foldl (\t v -> insert hf maxtd bsize v t) empty xs
