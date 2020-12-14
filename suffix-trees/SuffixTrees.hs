@@ -5,46 +5,81 @@ data SuffixTree = Leaf Int | Node [(String, SuffixTree)]
 
 ------------------------------------------------------
 
+-- Returns whether first string is a prefix of the second
 isPrefix :: String -> String -> Bool
-isPrefix 
-  = undefined
+isPrefix "" s = True
+isPrefix s "" = False
+isPrefix (x : xs) (y : ys)
+  | x == y    = isPrefix xs ys
+  | otherwise = False
 
-removePrefix :: String -> String -> String
-removePrefix
+-- Removes prefix from string
 --Pre: s is a prefix of s'
-  = undefined
+removePrefix :: String -> String -> String
+removePrefix "" s' = s'
+removePrefix s s'  = removePrefix (tail s) (tail s')
 
+-- Returns list of suffixes of a string
 suffixes :: [a] -> [[a]]
-suffixes
-  = undefined
+suffixes [] = []
+suffixes s  = s : suffixes (tail s)
 
+-- Returns whether s is a substring of s'
 isSubstring :: String -> String -> Bool
-isSubstring
-  = undefined
+isSubstring s s' = any (isPrefix s) (suffixes s')
 
+-- Returns indices of all occurrences of a substring in a string
+-- Uses naive approach
 findSubstrings :: String -> String -> [Int]
-findSubstrings
-  = undefined
+findSubstrings s s'
+  = map fst (filter snd numsuffix)
+  where
+    numsuffix = zip [0..] (map (isPrefix s) (suffixes s'))
 
 ------------------------------------------------------
 
+-- Returns indices stored in leaves of suffix tree
 getIndices :: SuffixTree -> [Int]
-getIndices 
-  = undefined
+getIndices (Leaf x)        = [x]
+getIndices (Node [])       = []
+getIndices (Node (x : xs)) = getIndices (snd x) ++ getIndices (Node xs)
 
+-- Extracts common prefix from two given strings
 partition :: Eq a => [a] -> [a] -> ([a], [a], [a])
-partition 
-  = undefined
+partition s s'
+  = partition' s s' []
+  where
+    partition' [] st p = (p, [], st)
+    partition' st [] p = (p, st, [])
+    partition' st@(x : xs) st'@(y : ys) p
+     | x == y    = partition' xs ys (p ++ [x])
+     | otherwise = (p, st, st')
 
 findSubstrings' :: String -> SuffixTree -> [Int]
-findSubstrings'
-  = undefined
+findSubstrings' _ (Leaf _) = []
+findSubstrings' _ (Node []) = []
+findSubstrings' s (Node (x : xs))
+  | s' == ""  = getIndices t
+  | a' == ""  = findSubstrings' s' t
+  | otherwise = findSubstrings' s (Node xs)
+  where
+    (a, t) = x
+    (p, s', a') = partition s a
 
 ------------------------------------------------------
 
 insert :: (String, Int) -> SuffixTree -> SuffixTree
-insert 
-  = undefined
+insert _ (Leaf x)       = Leaf x
+insert (s, i) (Node []) = Node [(s, Leaf i)]
+insert n@(s, i) (Node (x : xs))
+  | p /= "" && p == a = Node ((a, insert (s', i) t) : xs)
+  | p /= "" && p /= a = Node ((p, Node [(s', Leaf i), (a', t)]) : xs)
+  | otherwise         = Node (x : xs')
+  where
+    (a, t) = x
+    (p, s', a') = partition s a
+    Node xs' = insert n (Node xs)
+
 
 -- This function is given
 buildTree :: String -> SuffixTree 
