@@ -26,8 +26,20 @@ lookUp x (y : ys)
   | otherwise  = lookUp x ys
 
 checkSat :: BDD -> Env -> Bool
-checkSat 
-  = undefined
+checkSat (0, []) _ = False 
+checkSat (1, []) _ = True
+checkSat bdd env
+  = checkSat' (snd bdd) (fst bdd)
+  where
+    checkSat' :: [BDDNode] -> NodeId -> Bool
+    checkSat' _ 0 = False 
+    checkSat' _ 1 = True
+    checkSat' nodes id
+      | indBool   = checkSat' nodes tNode
+      | otherwise = checkSat' nodes fNode
+      where
+        (ind, fNode, tNode) = lookUp id nodes
+        indBool = lookUp ind env
 
 sat :: BDD -> [[(Index, Bool)]]
 sat 
@@ -83,7 +95,7 @@ b6 = Or (And (IdRef 1) (IdRef 2)) (And (IdRef 3) (IdRef 4))
 b7 = Or (Not (IdRef 3)) (Or (IdRef 2) (Not (IdRef 9)))
 b8 = Or (IdRef 1) (Not (IdRef 1))
 
-bdd1, bdd2, bdd3, bdd4, bdd5, bdd6, bdd7, bdd8 :: BDD
+bdd1, bdd2, bdd3, bdd4, bdd5, bdd6, bdd7, bdd8, bdd9 :: BDD
 bdd1 = (0,[])
 bdd2 = (2,[(4,(2,1,1)),(5,(2,1,0)),(2,(1,4,5))])
 bdd3 = (5,[(5,(1,0,1))])
@@ -98,5 +110,6 @@ bdd6 = (2,[(2,(1,4,5)),(4,(2,8,9)),(8,(3,16,17)),(16,(4,0,0)),
 bdd7 = (6,[(6,(2,4,5)),(4,(3,8,9)),(8,(9,1,1)),(9,(9,1,0)),
            (5,(3,10,11)),(10,(9,1,1)),(11,(9,1,1))])
 bdd8 = (2,[(2,(1,1,1))])
+bdd9 = (1,[])
 
 
