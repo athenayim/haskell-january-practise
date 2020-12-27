@@ -22,21 +22,23 @@ printF
 --------------------------------------------------------------------------
 -- Part I
 
--- 1 mark
-lookUp :: Eq a => a -> [(a, b)] -> b
+-- Looks up item in a list of item-value pairs
 -- Pre: The item being looked up has a unique binding in the list
-lookUp 
-  = undefined
+lookUp :: Eq a => a -> [(a, b)] -> b
+lookUp x (y : ys)
+  | x == fst y = snd y
+  | otherwise  = lookUp x ys
 
--- 3 marks
+-- Returns sorted list of variable names in a formula without duplicates
 vars :: Formula -> [Id]
-vars 
-  = undefined
+vars (Var x)   = [x]
+vars (Not x)   = nub (sort (vars x))
+vars (And x y) = nub (sort (vars x ++ vars y))
+vars (Or x y)  = nub (sort (vars x ++ vars y))
 
--- 1 mark
+-- Generates list of Id-Int pairs
 idMap :: Formula -> IdMap
-idMap 
-  = undefined
+idMap f = zip (vars f) [1..]
 
 --------------------------------------------------------------------------
 -- Part II
@@ -52,20 +54,35 @@ distribute (And a b) c
 distribute a b
   = Or a b
 
--- 4 marks
+-- Converts formula to Negation Normal Form
 toNNF :: Formula -> NNF
-toNNF 
-  = undefined
+toNNF (Var x)         = Var x
+toNNF (Not (Var x))   = Not (Var x)
+toNNF (Not (Not x))   = x
+toNNF (Not (And x y)) = Or (toNNF (Not x)) (toNNF (Not y))
+toNNF (Not (Or x y))  = And (toNNF (Not x)) (toNNF (Not y))
+toNNF (And x y)       = And (toNNF x) (toNNF y)
+toNNF (Or x y)        = Or (toNNF x) (toNNF y)
 
--- 3 marks
+-- Converts formula to Conjunctive Normal Form
 toCNF :: Formula -> CNF
-toCNF 
-  = undefined
+toCNF f
+  = toCNF' (toNNF f)
+  where
+    toCNF' (Or x y) = distribute x y
+    toCNF' f        = f
 
--- 4 marks
+-- Gives flattened representation of CNF formula
 flatten :: CNF -> CNFRep
-flatten 
-  = undefined
+flatten f
+  = flatten' f
+  where
+    ids = idMap f
+
+    flatten' (Var x) = [[lookUp x ids]]
+    flatten' (Not (Var x)) = [[negate (lookUp x ids)]]
+    flatten' (And x y) = flatten' x ++ flatten' y
+    flatten' (Or x y) = [concat (flatten' x ++ flatten' y)]
 
 --------------------------------------------------------------------------
 -- Part III
