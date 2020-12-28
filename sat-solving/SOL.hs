@@ -87,10 +87,28 @@ flatten f
 --------------------------------------------------------------------------
 -- Part III
 
--- 5 marks
+-- Propagates unit clauses in a flattened CNF, giving the resulting CNFRep and unit clauses propagated
 propUnits :: CNFRep -> (CNFRep, [Int])
-propUnits 
-  = undefined
+propUnits rep
+  = propUnits' (rep, []) []
+  where
+    propUnits' :: (CNFRep, [Int]) -> CNFRep -> (CNFRep, [Int])
+    propUnits' ([], ucs) stack
+      | not (checkSingle (filterUC ucs stack)) = (filterUC ucs stack, ucs)
+      | otherwise               = propUnits' (stack, ucs) []
+    propUnits' ([x] : xs, ucs) stack
+      | x `elem` ucs || negate x `elem` ucs = propUnits' (filterUC ucs xs, ucs) (filterUC ucs stack)
+      | otherwise = propUnits' (xs, ucs ++ [x]) (filterUC ucs stack)
+    propUnits' (x : xs, ucs) stack = propUnits' (xs, ucs) (filterUC ucs (stack ++ [x]))
+
+    filterUC :: [Int] -> CNFRep -> CNFRep  
+    filterUC _ [] = []
+    filterUC ucs (c : cs) = filter (\x -> negate x `notElem` ucs) (filter (`notElem` ucs) c) : filterUC ucs cs
+
+    checkSingle :: CNFRep -> Bool
+    checkSingle [] = False
+    checkSingle ([x] : xs) = True 
+    checkSingle (x : xs) = checkSingle xs
 
 -- 4 marks
 dp :: CNFRep -> [[Int]]
