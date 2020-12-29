@@ -56,17 +56,24 @@ lookUp i (x : xs)
   | otherwise  = lookUp i xs
 
 tryToLookUp :: Eq a => a -> b -> [(a, b)] -> b
-tryToLookUp 
-  = undefined
+tryToLookUp i def [] = def
+tryToLookUp i def (x : xs)
+  | i == fst x = snd x
+  | otherwise  = tryToLookUp i def xs
 
 -- Pre: The given value is in the table
 reverseLookUp :: Eq b => b -> [(a, b)] -> [a]
-reverseLookUp 
-  = undefined
+reverseLookUp v [] = []
+reverseLookUp v (x : xs)
+  | v == snd x = fst x : reverseLookUp v xs
+  | otherwise  = reverseLookUp v xs
 
 occurs :: String -> Type -> Bool
-occurs 
-  = undefined
+occurs x t = case t of
+  TInt   -> False
+  TBool  -> False 
+  TVar v -> x == v
+  TFun v w -> occurs x v || occurs x w
 
 ------------------------------------------------------
 -- PART II
