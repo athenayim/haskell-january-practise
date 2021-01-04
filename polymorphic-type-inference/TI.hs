@@ -105,19 +105,47 @@ inferType (App x y) env = case inferType x env of
 ------------------------------------------------------
 -- PART III
 
+-- Applies substitution to a given type
 applySub :: Sub -> Type -> Type
 applySub _ TInt  = TInt
 applySub _ TBool = TBool
 applySub s x'@(TVar x) = tryToLookUp x x' s
 applySub s (TFun x y) = TFun (applySub s x) (applySub s y)
 
+-- Top-level unification function
 unify :: Type -> Type -> Maybe Sub
 unify t t'
   = unifyPairs [(t, t')] []
 
+-- Unifies pairs of types
 unifyPairs :: [(Type, Type)] -> Sub -> Maybe Sub
-unifyPairs
-  = undefined
+unifyPairs [] sub                                = Just sub
+unifyPairs ((TInt, TInt) : ts) sub               = unifyPairs ts sub
+unifyPairs ((TBool, TBool) : ts) sub             = unifyPairs ts sub
+unifyPairs ((TFun t1 t2, TFun t1' t2') : ts) sub = unifyPairs ((t1, t1') : (t2, t2') : ts) sub
+
+unifyPairs ((TVar v, TVar v') : ts) sub
+  | v == v'   = unifyPairs ts sub
+  | otherwise = unifyPairs (applySub' [(v, TVar v')] ts) ((v, TVar v') : sub)
+
+unifyPairs ((TVar v, t) : ts) sub
+  | occurs v t = Nothing
+  | otherwise = unifyPairs (applySub' [s] ts) (s : sub)
+  where
+    s = (v, t)
+
+unifyPairs ((t, TVar v) : ts) sub
+  | occurs v t = Nothing
+  | otherwise = unifyPairs (applySub' [s] ts) (s : sub)
+  where
+    s = (v, t)
+
+unifyPairs _ _  = Nothing
+
+
+applySub' :: Sub -> [(Type, Type)] -> [(Type, Type)]
+applySub' s [] = []
+applySub' s ((t, t') : ts) = (applySub s t, applySub s t') : applySub' s ts    
 
 ------------------------------------------------------
 -- PART IV
