@@ -78,7 +78,7 @@ occurs x t = case t of
 ------------------------------------------------------
 -- PART II
 
--- Infers type of given expression
+-- Infers type of a given expression
 -- Pre: There are no user-defined functions (constructor Fun)
 -- Pre: All type variables in the expression have a binding in the given 
 --      type environment
@@ -105,8 +105,11 @@ inferType (App x y) env = case inferType x env of
 ------------------------------------------------------
 -- PART III
 
-applySub
-  = undefined
+applySub :: Sub -> Type -> Type
+applySub _ TInt  = TInt
+applySub _ TBool = TBool
+applySub s x'@(TVar x) = tryToLookUp x x' s
+applySub s (TFun x y) = TFun (applySub s x) (applySub s y)
 
 unify :: Type -> Type -> Maybe Sub
 unify t t'
