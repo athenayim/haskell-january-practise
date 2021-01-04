@@ -78,12 +78,29 @@ occurs x t = case t of
 ------------------------------------------------------
 -- PART II
 
+-- Infers type of given expression
 -- Pre: There are no user-defined functions (constructor Fun)
 -- Pre: All type variables in the expression have a binding in the given 
 --      type environment
 inferType :: Expr -> TEnv -> Type
-inferType
-  = undefined
+inferType (Number _) _  = TInt
+inferType (Boolean _) _ = TBool
+inferType (Id x) env    = lookUp x env
+inferType (Prim x) _    = lookUp x primTypes
+inferType (Cond x y z) env
+  | inferType x env /= TBool           = TErr
+  | inferType y env /= inferType z env = TErr
+  | otherwise                          = inferType y env
+inferType (App x y) env = case inferType x env of
+  TFun t t' -> inferApp (App x y)
+  f         -> TErr
+  where
+    inferApp (App f a)
+      | atype == t = t'
+      | otherwise  = TErr
+      where
+        TFun t t' = inferType f env
+        atype = inferType a env
 
 ------------------------------------------------------
 -- PART III
