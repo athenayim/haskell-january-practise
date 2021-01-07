@@ -39,28 +39,43 @@ type State = [(Id, Int)]
 
 -- Updates state with new variable binding
 update :: (Id, Int) -> State -> State
-update (id, n) [] = [(id, n)]
-update (id, n) (x : xs)
-  | id == fst x = (fst x, n) : xs
-  | otherwise   = x : update (id, n) xs
+update var [] = [var]
+update var@(id, n) (x : xs)
+  | id == fst x = var : xs
+  | otherwise   = x : update var xs
 
+-- Applies operator to arguments
 apply :: Op -> Int -> Int -> Int
-apply 
-  = undefined
+apply Add x y = x + y
+apply Mul x y = x * y
+apply Eq x y
+  | x == y    = 1
+  | otherwise = 0
+apply Gtr x y
+  | x > y     = 1
+  | otherwise = 0
 
-eval :: Exp -> State -> Int
+-- Evaluates expression with a state
 -- Pre: the variables in the expression will all be bound in the given state 
 -- Pre: expressions do not contain phi instructions
-eval 
-  = undefined
+eval :: Exp -> State -> Int
+eval (Const c) _              = c
+eval (Var v) state            = lookUp v state
+eval (Apply op ex1 ex2) state = apply op (eval ex1 state) (eval ex2 state)
 
 execStatement :: Statement -> State -> State
-execStatement 
-  = undefined
+execStatement (Assign id exp) state = update (id, eval exp state) state
+execStatement (If exp b1 b2) state
+  | eval exp state == 1 = execBlock b1 state
+  | otherwise           = execBlock b2 state
+execStatement (DoWhile b exp) state
+  | eval exp nextState == 1 = execStatement (DoWhile b exp) nextState
+  | otherwise               = nextState
+  where
+    nextState = execBlock b state
 
 execBlock :: Block -> State -> State
-execBlock 
-  = undefined
+execBlock b state = foldl (flip execStatement) state b
 
 ------------------------------------------------------------------------
 -- Given function for testing propagateConstants...
