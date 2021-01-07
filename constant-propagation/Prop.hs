@@ -63,6 +63,7 @@ eval (Const c) _              = c
 eval (Var v) state            = lookUp v state
 eval (Apply op ex1 ex2) state = apply op (eval ex1 state) (eval ex2 state)
 
+-- Executes statement
 execStatement :: Statement -> State -> State
 execStatement (Assign id exp) state = update (id, eval exp state) state
 execStatement (If exp b1 b2) state
@@ -74,6 +75,7 @@ execStatement (DoWhile b exp) state
   where
     nextState = execBlock b state
 
+-- Executes list of statements
 execBlock :: Block -> State -> State
 execBlock b state = foldl (flip execStatement) state b
 
@@ -88,15 +90,29 @@ applyPropagate (name, args, body)
 ------------------------------------------------------------------------
 -- PART II
 
+-- Simplifies experessions in SSA form
+-- Pre: the expression is in SSA form
 foldConst :: Exp -> Exp
--- Pre: the expression is in SSA form
-foldConst 
-  = undefined
+foldConst (Const x) = Const x
+foldConst e@(Apply Add (Const c1) (Const c2))
+  = Const (eval e [])
+foldConst e@(Apply Add x y)
+  | x == Const 0 = y
+  | y == Const 0 = x
+  | otherwise    = e
+foldConst e@(Phi (Const c1) (Const c2))
+  | c1 == c2  = Const c1
+  | otherwise = e
 
-sub :: Id -> Int -> Exp -> Exp
+-- Substitutes id for an integer in an expression and applies foldConst
 -- Pre: the expression is in SSA form
-sub 
-  = undefined
+sub :: Id -> Int -> Exp -> Exp
+sub _ _ (Const x) = Const x
+sub id n (Var x)
+  | id == x   = Const n
+  | otherwise = Var x
+sub id n (Apply op ex1 ex2) = foldConst (Apply op (sub id n ex1) (sub id n ex2))
+sub id n (Phi ex1 ex2) = foldConst (Phi (sub id n ex1) (sub id n ex2))
 
 -- Use (by uncommenting) any of the following, as you see fit...
 -- type Worklist = [(Id, Int)]
