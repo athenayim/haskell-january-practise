@@ -168,10 +168,31 @@ optimise (name, args, body)
 ------------------------------------------------------------------------
 -- PART III
 
+-- Removes phi functions
 unPhi :: Block -> Block
 -- Pre: the block is in SSA form
-unPhi 
-  = undefined
+unPhi [] = []
+unPhi (If e p q : b)
+  = If e p' q' : unPhi b'
+  where
+    p' = unPhi p ++ ass
+    q' = unPhi q ++ ass'
+    (ass, ass', b') = getPhiAssignments b
+unPhi (DoWhile db p : b)
+  = ass ++ (DoWhile db'' p : unPhi b)
+  where
+    db'' = unPhi db' ++ ass'
+    (ass, ass', db') = getPhiAssignments db
+unPhi (assign : b)
+  = assign : unPhi b
+
+getPhiAssignments :: Block -> (Block, Block, Block)
+getPhiAssignments (Assign v (Phi e e') : b)
+  = (Assign v e : ass, Assign v e' : ass', unPhi b')
+  where
+    (ass, ass', b') = getPhiAssignments b
+getPhiAssignments b
+  = ([], [], b)
 
 ------------------------------------------------------------------------
 -- Part IV
