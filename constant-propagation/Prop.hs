@@ -93,16 +93,14 @@ applyPropagate (name, args, body)
 -- Simplifies experessions in SSA form
 -- Pre: the expression is in SSA form
 foldConst :: Exp -> Exp
-foldConst (Const x) = Const x
-foldConst e@(Apply Add (Const c1) (Const c2))
-  = Const (eval e [])
+foldConst e@(Phi (Const c1) (Const c2))
+  | c1 == c2  = Const c1
+foldConst (Apply op (Const x) (Const y))
+  = Const (apply op x y)
 foldConst e@(Apply Add x y)
   | x == Const 0 = y
   | y == Const 0 = x
-  | otherwise    = e
-foldConst e@(Phi (Const c1) (Const c2))
-  | c1 == c2  = Const c1
-  | otherwise = e
+foldConst e = e
 
 -- Substitutes id for an integer in an expression and applies foldConst
 -- Pre: the expression is in SSA form
@@ -114,15 +112,44 @@ sub id n (Var x)
 sub id n (Apply op ex1 ex2) = foldConst (Apply op (sub id n ex1) (sub id n ex2))
 sub id n (Phi ex1 ex2) = foldConst (Phi (sub id n ex1) (sub id n ex2))
 
--- Use (by uncommenting) any of the following, as you see fit...
--- type Worklist = [(Id, Int)]
--- scan :: Id -> Int -> Block -> (Worklist, Block)
--- scan :: (Exp -> Exp) -> Block -> (Exp -> Exp, Block)
+type Worklist = [(Id, Int)]
+
+scan :: Id -> Int -> Block -> (Worklist, Block)
+scan v c b
+  = foldr scan' ([], []) b
+  where
+    scan' :: Statement -> (Worklist, Block) -> (Worklist, Block)
+    scan' (Assign "$return" e) (wl, b)
+      = (wl, Assign "$return" (sub v c e) : b)
+    scan' (Assign v' e) (wl, b)
+      = scan'' (sub v c e)
+      where
+        scan'' (Const c')
+          = ((v', c') : wl, b)
+        scan'' e'
+          = (wl, (Assign v' e') : b)
+
+    scan' (If e p q) (wl, b)
+      = (wl ++ wl' ++ wl'', If (sub v c e) p' q' : b)
+      where
+        (wl', p') = scan v c p
+        (wl'', q') = scan v c q
+
+    scan' (DoWhile db p) (wl, b)
+      = (wl ++ wl', DoWhile b' (sub v c p) : b)
+      where
+        (wl', b') = scan v c db
  
 propagateConstants :: Block -> Block
 -- Pre: the block is in SSA form
-propagateConstants 
-  = undefined
+propagateConstants
+  = prop . scan "$INVALID" 0
+  where
+    prop ([], bl) = bl
+    prop ((v, c) : wl, bl)
+      = prop (wl ++ wl', bl')
+      where
+        (wl', bl') = scan v c bl
 
 ------------------------------------------------------------------------
 -- Given functions for testing unPhi...
