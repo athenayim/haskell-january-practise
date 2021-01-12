@@ -76,7 +76,7 @@ assignArray :: Value -> Value -> Value -> Value
 -- Pre: The three values have the appropriate value types (array (A), 
 --      integer (I) and integer (I)) respectively.
 assignArray (A a) (I i) (I v) 
-  = A ((fst (a !! i), v) : deleteNth i a)
+  = A ((i, v) : filter (\(x, y) -> x /= i) a)
 
 deleteNth _ [] = []
 deleteNth 0 (x : xs) = xs
@@ -93,23 +93,47 @@ updateVar (id, v) (b@(id', (scope, v')) : bs)
 
 applyOp :: Op -> Value -> Value -> Value
 -- Pre: The values have the appropriate types (I or A) for each primitive
-applyOp 
-  = undefined
+applyOp Add (I x) (I y)
+  = I (x + y)
+applyOp Mul (I x) (I y)
+  = I (x * y)
+applyOp Less (I x) (I y)
+  | x < y     = I 1
+  | otherwise = I 0
+applyOp Equal (I x) (I y)
+  | x == y    = I 1
+  | otherwise = I 0
+applyOp Index (A a) (I x)
+  | isJust (lookup x a) = I (lookUp x a)
+  | otherwise           = I 0
 
 bindArgs :: [Id] -> [Value] -> State
 -- Pre: the lists have the same length
 bindArgs
-  = undefined
+  = zipWith (\i v -> (i, (Local, v)))
 
 evalArgs :: [Exp] -> [FunDef] -> State -> [Value]
-evalArgs
-  = undefined
+evalArgs exps fds state
+  = [eval exp fds state | exp <- exps]
 
 eval :: Exp -> [FunDef] -> State -> Value
 -- Pre: All expressions are well formed
 -- Pre: All variables referenced have bindings in the given state
-eval 
-  = undefined
+eval (Const c) _ _
+  = c
+eval (Var v) _ state
+  = getValue v state
+eval (Cond x y z) fds state
+  | eval x fds state == I 1 = eval y fds state
+  | otherwise               = eval z fds state
+eval (OpApp op x y) fds state
+  = applyOp op (eval x fds state) (eval y fds state)
+eval (FunApp id es) fds state
+  = eval e fds (bs ++ state)
+  where
+    (as, e) = lookUp id fds
+    vs = evalArgs es fds state
+    bs = bindArgs as vs
 
 ---------------------------------------------------------------------
 -- Part III
@@ -118,13 +142,46 @@ executeStatement :: Statement -> [FunDef] -> [ProcDef] -> State -> State
 -- Pre: All statements are well formed 
 -- Pre: For array element assignment (AssignA) the array variable is in scope,
 --      i.e. it has a binding in the given state
-executeStatement 
-  = undefined
+executeStatement (Assign id e) fds pds state
+  = updateVar (id, eval e fds state) state
+
+executeStatement (AssignA a i e) fds pds state
+  = updateVar (a, assignArray arr (eval i fds state) (eval e fds state)) state
+  where
+    arr = getValue a state
+
+executeStatement (If e b b') fds pds state
+  | eval e fds state == I 1 = executeBlock b fds pds state
+  | otherwise               = executeBlock b' fds pds state
+
+executeStatement (While e b) fds pds state
+  | eval e fds state == I 1 = executeStatement (While e b) fds pds state'
+  | otherwise               = state
+  where
+    state' = executeBlock b fds pds state
+
+executeStatement (Call id p es) fds pds state
+  | id /= ""  = updateVar (id, getValue "$res" state') state''
+  | otherwise = state''
+  where
+    (vars, bl) = lookUp p pds
+    gbs = getGlobals state
+    vs = evalArgs es fds state
+    lcState = bindArgs vars vs
+    state' = executeBlock bl fds pds (lcState ++ gbs)
+    state'' = getLocals state ++ getGlobals state'
+
+executeStatement (Return e) fds pds state
+  = updateVar ("$res", eval e fds state) (getGlobals state)
 
 executeBlock :: Block -> [FunDef] -> [ProcDef] -> State -> State
 -- Pre: All code blocks and associated statements are well formed
-executeBlock 
-  = undefined
+executeBlock [] _ _ state
+  = state
+executeBlock (st : sts) fds pds state
+  = executeBlock sts fds pds state'
+  where
+    state' = executeStatement st fds pds state
 
 ---------------------------------------------------------------------
 -- Part IV
