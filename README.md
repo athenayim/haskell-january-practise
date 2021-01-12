@@ -1,3 +1,3 @@
 # haskell-january-practise
 
-A collection of Haskell practises for the January test.
+My solutions for past papers of the January Haskell tests at Imperial College London.
