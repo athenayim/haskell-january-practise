@@ -110,10 +110,16 @@ propUnits rep
     checkSingle ([x] : xs) = True 
     checkSingle (x : xs) = checkSingle xs
 
--- 4 marks
+-- Returns list of all satisfying assignments for a given CNFRep
+-- ???
 dp :: CNFRep -> [[Int]]
-dp 
-  = undefined
+dp rep
+  | null rep'     = [ucs]
+  | [] `elem` rep' = []
+  | otherwise      = map (ucs++) (dp ([bf] : rep') ++ dp ([negate bf] : rep'))
+  where
+    (rep', ucs) = propUnits rep
+    bf = head (head rep')
 
 --------------------------------------------------------------------------
 -- Part IV

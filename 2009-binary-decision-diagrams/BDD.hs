@@ -42,9 +42,9 @@ checkSat bdd env
         indBool = lookUp ind env
 
 sat :: BDD -> [[(Index, Bool)]]
-sat 
+sat bdd
   = undefined
-
+      
 ------------------------------------------------------
 -- PART II
 

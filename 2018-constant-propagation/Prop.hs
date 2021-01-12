@@ -44,6 +44,10 @@ update var@(id, n) (x : xs)
   | id == fst x = var : xs
   | otherwise   = x : update var xs
 
+update' :: (Id, Int) -> State -> State
+update' b@(v, _) s
+  = b : filter ((/= v) . fst) s
+ 
 -- Applies operator to arguments
 apply :: Op -> Int -> Int -> Int
 apply Add x y = x + y

@@ -166,9 +166,24 @@ combineSubs :: [Sub] -> Sub
 combineSubs 
   = foldr1 combine
 
+
+-- incomplete
 inferPolyType :: Expr -> Type
-inferPolyType
-  = undefined
+inferPolyType exp
+  = t
+  where
+    (s, t, n) = inferPolyType' exp [] 0
+
+    inferPolyType' :: Expr -> TEnv -> Int -> (Sub, Type, Int)
+    inferPolyType' (Number x) env n  = (env, inferType (Number x) env, n)
+    inferPolyType' (Boolean x) env n = (env, inferType (Boolean x) env, n)
+    inferPolyType' (Prim x) env n    = (env, inferType (Prim x) env, n)
+    inferPolyType' (Id x) env n      = (env, inferType (Id x) env, n)
+    
+    makeVar :: Int -> String
+    makeVar n
+      = 'a' : show n
+
 
 -- You may optionally wish to use one of the following helper function declarations
 -- as suggested in the specification. 

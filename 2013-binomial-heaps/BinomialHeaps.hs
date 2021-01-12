@@ -26,20 +26,28 @@ combineTrees t1@(Node x1 r1 ch1) t2@(Node x2 r2 ch2)
 -- PART II
 
 extractMin :: Ord a => BinHeap a -> a
-extractMin 
-  = undefined
+extractMin h = minimum (map value h)
 
+-- Merges two heaps into one
 mergeHeaps :: Ord a => BinHeap a -> BinHeap a -> BinHeap a
-mergeHeaps 
-  = undefined
+mergeHeaps h [] = h
+mergeHeaps [] h = h
+mergeHeaps h1@(x : xs) h2@(y : ys)
+ | rank x < rank y = x : mergeHeaps xs h2
+ | rank y < rank x = y : mergeHeaps h1 ys
+ | otherwise       = mergeHeaps xs (ys ++ [combineTrees x y])
 
+-- Inserts new value into heap
 insert :: Ord a => a -> BinHeap a -> BinHeap a
-insert 
-  = undefined
+insert n h = mergeHeaps [Node n 0 []] h
 
+-- Deletes minimum value from heap
 deleteMin :: Ord a => BinHeap a -> BinHeap a
-deleteMin 
-  = undefined
+deleteMin []
+ = []
+deleteMin h@(x : xs)
+ | value x == extractMin h = mergeHeaps xs (reverse (children x))
+ | otherwise               = mergeHeaps (deleteMin xs) [x]
 
 remove :: Eq a => a -> BinHeap a -> BinHeap a
 remove
@@ -50,8 +58,17 @@ removeMin
   = undefined
 
 binSort :: Ord a => [a] -> [a]
-binSort 
-  = undefined
+binSort [] = []
+binSort ns
+ = reConcat (insertValues ns [])
+ where
+   insertValues :: [a] -> BinHeap a -> BinHeap a
+   insertValues [] _       = []
+   insertValues (x : xs) h = insert x (insertValues xs h)
+
+   reConcat :: BinHeap a -> [a]
+   reConcat [] = []
+   reConcat h = (extractMin h) : reConcat (deleteMin h)
 
 --------------------------------------------------------------
 -- PART III
