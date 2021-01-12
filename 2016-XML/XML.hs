@@ -47,28 +47,47 @@ printXMLs
 
 skipSpace :: String -> String
 skipSpace
-  = undefined
+  = dropWhile isSpace
 
 getAttribute :: String -> XML -> String
-getAttribute 
-  = undefined
+getAttribute x (Element _ att _)
+  = fromMaybe "" (lookup x att)
+getAttribute x xml = ""
 
 getChildren :: String -> XML -> [XML]
-getChildren 
-  = undefined
+getChildren c (Element name att xmls)
+  = getC xmls
+  where
+    getC [] = []
+    getC (ch@(Element n a xs') : xs)
+      | c == n    = ch : getC xs
+      | otherwise = getC xs
+    getC (_ : xs) = getC xs
+getChildren c _ = []
 
 getChild :: String -> XML -> XML
-getChild 
-  = undefined
+getChild c xml
+  | null children = Text ""
+  | otherwise     = head children
+  where
+    children = getChildren c xml
 
 addChild :: XML -> XML -> XML
 -- Pre: the second argument is an Element
-addChild 
-  = undefined
+addChild ch (Element name att xmls)
+  = Element name att (xmls ++ [ch])
 
 getValue :: XML -> XML
-getValue 
-  = undefined
+getValue Null 
+  = Text ""
+getValue (Text s)
+  = Text s
+getValue (Element name att xmls)
+  = Text (concatMap (fromText . getValue) xmls)
+
+fromText :: XML -> String
+fromText (Text st) 
+  = st
 
 -------------------------------------------------------------------------
 -- Part II
