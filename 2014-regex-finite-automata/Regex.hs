@@ -99,8 +99,20 @@ labels ts
     labels' ((st1, st2, l) : ts)   = l : labels' ts
 
 accepts :: Automaton -> String -> Bool
-accepts 
-  = undefined
+accepts atm s
+  = accepts' (startState atm) s
+  where
+    accepts' :: State -> String -> Bool 
+    accepts' st s
+      | isTerminal st atm && null s = True
+      | otherwise = any (try s) (transitionsFrom st atm)
+      where
+        try :: String -> Transition -> Bool
+        try s (st1, st2, Eps) = accepts' st2 s
+        try "" (st1, st2, C ch) = False
+        try (c : cs) (st1, st2, C ch)
+          | c == ch   = accepts' st2 cs
+          | otherwise = False
 
 --------------------------------------------------------
 -- Part III
@@ -111,9 +123,27 @@ makeNDA re
   where
     (transitions, k) = make (simplify re) 1 2 3
 
+-- Constructs NDA from state m to n
 make :: RE -> Int -> Int -> Int -> ([Transition], Int)
-make 
-  = undefined
+make Null m n k 
+  = ([(m, n, Eps)], k)
+make (Term ch) m n k 
+  = ([(m, n, C ch)], k)
+make (Seq r1 r2) m n k 
+  = (r1' ++ (k, k + 1, Eps) : r2', k'')
+  where
+    (r1', k') = make r1 m k (k + 2)
+    (r2', k'') = make r2 (k + 1) n k'
+make (Alt r1 r2) m n k
+  = ((m, k, Eps) : (m, k + 2, Eps) : (k + 1, n, Eps) : (k + 3, n, Eps) : r1' ++ r2', k'')
+  where
+    (r1', k') = make r1 k (k + 1) (k + 4)
+    (r2', k'') = make r2 (k + 2) (k + 3) k'
+make (Rep r) m n k
+  = ((m, k, Eps) : (m, n, Eps) : (k + 1, k, Eps) : (k + 1, n, Eps) : r', k')
+  where
+    (r', k') = make r k (k + 1) (k + 2)
+
 
 --------------------------------------------------------
 -- Part IV
