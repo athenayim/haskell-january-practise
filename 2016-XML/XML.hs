@@ -109,18 +109,30 @@ sentinel
 
 addText :: String -> Stack -> Stack
 -- Pre: There is at least one Element on the stack
-addText 
-  = undefined
+addText s (e : es)
+  = addChild (Text s) e : es
 
 popAndAdd :: Stack -> Stack
 -- Pre: There are at least two Elements on the stack
-popAndAdd 
-  = undefined
+popAndAdd (e : e' : es)
+  = addChild e e' : es
 
 parseAttributes :: String -> (Attributes, String)
 -- Pre: The XML attributes string is well-formed
-parseAttributes 
-  = undefined
+parseAttributes st
+  = parseAttributes' (skipSpace st)
+  where
+    parseAttributes' s@(c : cs)
+      | c == '>'  = ([], cs)
+      | otherwise = ((name, val) : atts, remSt)
+      where
+        (name, s') = parseName s
+        s2 = tail (skipSpace s')
+        s3 = tail (skipSpace s2)
+        (val, s4) = span (/= '\"') s3
+        s5 = tail (skipSpace s4)
+
+        (atts, remSt) = parseAttributes s5
 
 parse :: String -> XML
 -- Pre: The XML string is well-formed

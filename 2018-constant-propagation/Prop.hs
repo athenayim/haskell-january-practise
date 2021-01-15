@@ -131,7 +131,7 @@ scan v c b
         scan'' (Const c')
           = ((v', c') : wl, b)
         scan'' e'
-          = (wl, (Assign v' e') : b)
+          = (wl, Assign v' e' : b)
 
     scan' (If e p q) (wl, b)
       = (wl ++ wl' ++ wl'', If (sub v c e) p' q' : b)
